@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Square Root Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1b2a4a;--paper:#f3f7fb;--card:#fff;--line:#c9d6e8;--pencil:#ffc83d;--ok:#16895f;--okbg:#dff5ea;--bad:#d23b40;--badbg:#fde4e4;--blue:#3a6df0;--muted:#5a6b8a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e8eefb;--paper:#121a2e;--card:#1b2644;--line:#2e3d63;--okbg:#16392f;--badbg:#44222a;--muted:#9fb0d0;--blue:#7ea0ff;--ok:#4fd1a0;--bad:#ff7a7f}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background-color:var(--paper);
+background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:28px 28px;font-size:18px;line-height:1.5}
+main{max-width:680px;margin:0 auto;padding:20px 16px 48px}
+h1,h2,h3{line-height:1.15;margin:0 0 .5em}
+h1{font-size:2.6rem;font-weight:800}h2{font-size:1.7rem;font-weight:800}h3{font-size:1.15rem}
+.card{background:var(--card);border:2.5px solid var(--ink);border-radius:16px;padding:22px;box-shadow:5px 5px 0 var(--ink);margin-bottom:18px}
+.hl{background:linear-gradient(transparent 55%,var(--pencil) 55%)}
+button{font:inherit;font-weight:700;cursor:pointer;border:2.5px solid var(--ink);border-radius:12px;background:var(--pencil);color:#1b2a4a;padding:12px 22px;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+button:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+button:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+button.ghost{background:var(--card);color:var(--ink)}
+input{font:inherit;padding:11px 14px;border:2.5px solid var(--ink);border-radius:12px;background:var(--card);color:var(--ink);width:100%;max-width:320px}
+.map{display:flex;gap:8px;margin-bottom:18px}
+.node{flex:1;text-align:center;padding:8px 4px;border:2.5px solid var(--ink);border-radius:12px;background:var(--card);font-size:.85rem;font-weight:700;opacity:.55}
+.node.on{background:var(--pencil);color:#1b2a4a;opacity:1}.node.done{background:var(--okbg);opacity:1}
+.pips{display:flex;gap:6px;margin-bottom:14px}
+.pip{flex:1;height:10px;border-radius:6px;border:2px solid var(--ink);background:var(--card)}
+.pip.r{background:var(--ok)}.pip.w{background:var(--bad)}
+.opts{display:grid;gap:10px;margin:16px 0}
+.opt{text-align:left;background:var(--card);color:var(--ink);font-size:1.15rem;font-weight:600}
+.opt.right{background:var(--okbg);border-color:var(--ok)}.opt.wrong{background:var(--badbg);border-color:var(--bad)}
+.opt:disabled{cursor:default;transform:none}
+.q{font-size:1.5rem;font-weight:700;margin:6px 0}
+.fb{padding:12px 14px;border-radius:12px;margin:10px 0;border:2px solid var(--ink)}
+.fb.ok{background:var(--okbg)}.fb.no{background:var(--badbg)}
+.eg{background:var(--paper);border:2px dashed var(--ink);border-radius:12px;padding:12px 16px;margin:12px 0;font-size:1.1rem}
+.eg div{padding:2px 0}
+.muted{color:var(--muted)}#ex{margin-top:6px}#deep{margin-top:12px}
+.big{font-size:3.2rem;font-weight:800}
+.cert{text-align:center;border-style:double;border-width:7px}
+.code{font-size:2rem;font-weight:800;letter-spacing:.12em;background:var(--pencil);color:#1b2a4a;display:inline-block;padding:4px 16px;border-radius:10px;border:2.5px solid var(--ink)}
+.bit{position:fixed;top:-20px;width:10px;height:14px;z-index:9;animation:fall 2.2s linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@keyframes pop{0%{transform:scale(.97)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
+.pop{animation:pop .35s}
+@media (prefers-reduced-motion:reduce){.bit,.pop{animation:none}.bit{display:none}button{transition:none}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+var TEACHER_PIN = "4242";   // teacher code: change this to whatever you like
+var PASS = 3, ASKED = 4;    // 3 of 4 correct = 75%
+
+var LV = [
+{n:"Square root basics", lesson:`
+<h3>When can I take square roots?</h3>
+<p>Use it when the variable (or a group like <b>(x + 2)</b>) is <b>squared</b> and there’s no plain x term hanging around.</p><p>✔ Works: <b>x² = 49</b>, <b>4x² − 63 = 1</b>, <b>2(x − 4)² = 36</b><br>✘ Not this method: <b>x² + 5x + 6 = 0</b> (there’s a plain x term too)</p>
+<p><b>Steps:</b></p>
+<ol><li>Use inverse operations to get <b>x²</b> (or <b>(x + #)²</b>) alone.</li><li>Take the square root of both sides. <span class="hl">Don’t forget the ±!</span></li><li>Keep solving with inverse operations.</li></ol>
+<div class="eg"><b>Example: x² = 49</b><div>x = ±√49</div><div>x = ±7 (both 7 and −7 work)</div></div><h3>Why the ±?</h3><p>7 · 7 = 49, but also (−7)(−7) = 49. Two numbers square to 49, so there are two answers. Check: 7² = 49 ✔ and (−7)² = 49 ✔.</p><h3>Perfect squares to know</h3><p>1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144</p><div class="eg"><b>Not a perfect square? Leave it as a radical.</b><div>x² = 2</div><div>x = ±√2</div></div><div class="eg"><b>Simplify the radical when you can: 2x² = 16</b><div>x² = 8 (divide by 2)</div><div>x = ±√8 = ±√4 · √2</div><div>x = ±2√2</div></div><div class="eg"><b>Isolate first: 5x² = 45</b><div>x² = 9 (divide both sides by 5)</div><div>x = ±3</div></div>`,
+q:[
+["When can you solve an equation by taking square roots?","When x (or a group like (x + 2)) is squared and there’s no plain x term",["Any equation with an x in it","Only when the answer is a whole number","Only when the equation has a ± in it"],"It works when the squared part can be isolated by itself."],
+["Solve: x² = 49","x = ±7",["x = 7","x = ±24.5","x = ±49"],"√49 = 7, and −7 also works, so x = ±7."],
+["Solve: x² = 121","x = ±11",["x = 11","x = ±60.5","x = ±121"],"11 · 11 = 121 and (−11)(−11) = 121."],
+["Solve: x² = 2","x = ±√2",["x = ±1","x = √2","x = ±4"],"2 isn’t a perfect square, so leave it as ±√2."],
+["Why do we write ± when we take the square root of both sides?","Both a positive and a negative number squared give a positive result",["Because every answer is zero","Because square roots are always negative","It’s just a rule with no reason"],"3² = 9 and (−3)² = 9, so there are two solutions."],
+["What’s the FIRST step to solve 5x² = 45?","Divide both sides by 5",["Take the square root of both sides","Subtract 5 from both sides","Multiply both sides by 45"],"Isolate x² first: 5x² = 45 becomes x² = 9, then x = ±3."],
+["Solve: 2x² = 16","x = ±2√2",["x = ±4","x = ±√2","x = ±4√2"],"Divide by 2: x² = 8. Then √8 = √4 · √2 = 2√2, so x = ±2√2."]]},
+{n:"Two-step equations & i", lesson:`
+<h3>Isolate first, then root</h3>
+<div class="eg"><b>Example: 4x² − 63 = 1</b><div>4x² = 64 (add 63)</div><div>x² = 16 (divide by 4)</div><div>x = ±4 (square root, don’t forget ±)</div></div>
+<h3>What if x² equals a negative?</h3>
+<p>No real number squared gives a negative. So mathematicians invented the <b>imaginary unit</b>:</p><div class="eg"><b>i = √−1</b>, which means <b>i² = −1</b></div><p>To take the root of a negative, pull out the negative as <b>i</b>, then finish the usual way:</p><div class="eg"><div>√−9 = √9 · √−1 = <b>3i</b></div><div>√−16 = <b>4i</b></div></div><p>The answer is <span class="hl">an imaginary solution</span>. Don’t forget the ±.</p>
+<div class="eg"><b>Example: 0 = −5x² − 125</b><div>5x² = −125 (add 5x² to both sides)</div><div>x² = −25 (divide by 5)</div><div>x = ±√−25 = <b>±5i</b></div></div>`,
+q:[
+["Solve: 4x² − 63 = 1","x = ±4",["x = ±16","x = 4","x = ±15.5"],"4x² = 64, x² = 16, x = ±4."],
+["Solve: 3x² − 10 = 17","x = ±3",["x = ±9","x = ±9/3","x = 3"],"3x² = 27, x² = 9, x = ±3."],
+["Solve: 2x² + 5 = 55","x = ±5",["x = ±25","x = ±√55","x = ±10"],"2x² = 50, x² = 25, x = ±5."],
+["Solve: 0 = −5x² − 125","x = ±5i",["x = ±5","x = 5i","x = ±25i"],"x² = −25, so x = ±√−25 = ±5i."],
+["Solve: 0 = −3x² − 48","x = ±4i",["x = ±4","x = ±16i","x = ±8i"],"3x² = −48 gives x² = −16, so x = ±4i."],
+["Solve: x² − 7 = 42","x = ±7",["x = ±35","x = 7","x = ±49"],"x² = 49, so x = ±7."],
+["Solve: x² = −49","x = ±7i",["x = 7i","x = ±7","x = ±49i"],"x = ±√−49 = ±(√49 · √−1) = ±7i."]]},
+{n:"Squared groups", lesson:`
+<h3>Treat (x + #) like one chunk</h3>
+<p>The group <b>(x − 4)</b> acts like one chunk. Get it alone first. Then take the root, then do one more step to get x by itself.</p><ol><li>Add or subtract to move the loose number away.</li><li>Divide by the number in front of the group.</li><li>Take ± the square root of both sides.</li><li>Move the number inside the parentheses to the other side.</li></ol>
+<div class="eg"><b>Example: 0 = 2(x − 4)² − 36</b><div>36 = 2(x − 4)²</div><div>18 = (x − 4)² (divide by 2)</div><div>x − 4 = ±√18 = ±3√2</div><div>x = 4 ± 3√2</div></div>
+<div class="eg"><b>Example: 0 = 3(x + 1)² + 27</b><div>−27 = 3(x + 1)²</div><div>−9 = (x + 1)² (divide by 3)</div><div>x + 1 = ±√−9 = ±3i</div><div>x = −1 ± 3i (subtract 1 from both sides)</div></div><p class="muted">Write complex answers as a number plus or minus a number times i.</p>`,
+q:[
+["Solve: 0 = 2(x − 4)² − 36","x = 4 ± 3√2",["x = ±3√2","x = −4 ± 3√2","x = 4 ± 9"],"(x − 4)² = 18, x − 4 = ±√18 = ±3√2, so x = 4 ± 3√2."],
+["Solve: (x − 2)² = 25","x = 7 or x = −3",["x = 27 or x = −23","x = ±3","x = 3 or x = −7"],"x − 2 = ±5, so x = 2 + 5 = 7 or x = 2 − 5 = −3."],
+["Solve: (x + 3)² = 16","x = 1 or x = −7",["x = 7 or x = −1","x = ±4","x = −3 or x = 3"],"x + 3 = ±4, so x = −3 + 4 = 1 or x = −3 − 4 = −7."],
+["Solve: 0 = 3(x + 1)² + 27","x = −1 ± 3i",["x = 1 ± 3i","x = −1 ± 9i","x = ±3i"],"(x + 1)² = −9, so x + 1 = ±3i and x = −1 ± 3i."],
+["Solve: 2(x + 5)² = 50","x = 0 or x = −10",["x = 10 or x = 0","x = ±5","x = −5 ± 25"],"(x + 5)² = 25, x + 5 = ±5, so x = 0 or x = −10."],
+["Solve: (x − 1)² + 4 = 0","x = 1 ± 2i",["x = −1 ± 2i","x = 1 ± 4i","x = ±2i"],"(x − 1)² = −4, so x − 1 = ±2i and x = 1 ± 2i."]]},
+{n:"Rationalizing", lesson:`
+<h3>Rationalize the denominator</h3>
+<p>An answer isn’t finished if there’s a square root on the bottom of a fraction. “Rationalize” it: multiply the top and bottom by that same root. That’s multiplying by “one,” so the value doesn’t change, and √7 · √7 = 7 makes the bottom rational.</p>
+<div class="eg"><b>3/√7</b><div>= 3/√7 · √7/√7</div><div>= 3√7 / 7 ✔ (denominator is now rational)</div></div>
+<div class="eg"><b>Example: 3x² − 6 = 19</b><div>x² = 25/3</div><div>x = ±5/√3 = ±5√3/3</div></div>
+<h3>Negatives still give imaginary answers</h3><div class="eg"><b>Example: −80 = 6x²</b><div>x² = −40/3</div><div>x = ±√(40/3) · i</div><div>= ±(2√30/3)i (rationalized)</div></div><p class="muted">Rationalize first, then put the i on the end of the term.</p>`,
+q:[
+["Rationalize: 3/√7","3√7/7",["3/7","√7/3","3√7/49"],"Multiply top and bottom by √7: 3√7/(√7·√7) = 3√7/7."],
+["Rationalize: 5/√2","5√2/2",["5/2","√2/5","5√2/4"],"Multiply by √2/√2: 5√2/2."],
+["Solve: 3x² − 6 = 19","x = ±5√3/3",["x = ±5√3/9","x = ±5/3","x = ±25√3/3"],"x² = 25/3, x = ±5/√3, and rationalizing gives ±5√3/3."],
+["Solve: 7x² = 40","x = ±2√70/7",["x = ±2√10/7","x = ±√40/7","x = ±40√7/7"],"x² = 40/7, x = ±√40/√7 = ±√280/7 = ±2√70/7."],
+["Solve: −80 = 6x²","x = ±(2√30/3)i",["x = ±2√30/3","x = ±(2√10/3)i","x = ±(40/3)i"],"x² = −40/3, so x = ±√(40/3)i = ±(2√30/3)i after rationalizing."],
+["Solve: −7(x + 6)² = 40","x = −6 ± (2√70/7)i",["x = 6 ± (2√70/7)i","x = −6 ± (2√10/7)i","x = −6 ± (40/7)i"],"(x + 6)² = −40/7, so x + 6 = ±(2√70/7)i and x = −6 ± (2√70/7)i."]]}
+];
+
+var DEEP=[
+`<h3>Step by step</h3><ol><li><b>Look at the equation.</b> Is something squared, with no plain x term? If so, this method works.</li><li><b>Get the squared part alone.</b> Undo adding or subtracting first, then undo multiplying by dividing. Example: 5x² = 45 becomes x² = 9.</li><li><b>Take the square root of both sides and write ±.</b> x = ±√9</li><li><b>Simplify.</b> √9 = 3, so x = ±3. If the number isn’t a perfect square, keep the radical, like ±√2, or pull out a perfect square: √8 = √4 · √2 = 2√2.</li><li><b>Check.</b> Put both answers back in: 5(3)² = 45 ✔ and 5(−3)² = 45 ✔.</li></ol><p><b>Common mistakes:</b> forgetting the ±, taking the root before x² is alone, or cutting the number in half instead of taking its square root (x² = 49 is not x = 24.5).</p>`,
+`<h3>Step by step: 4x² − 63 = 1</h3><ol><li><b>Undo the subtraction.</b> Add 63 to both sides: 4x² = 64.</li><li><b>Undo the multiplication.</b> Divide both sides by 4: x² = 16.</li><li><b>Take ± the square root.</b> x = ±√16 = ±4.</li></ol><h3>When x² is negative</h3><ol><li>Get x² alone as usual. Say you get x² = −25.</li><li>Split the root: √−25 = √25 · √−1.</li><li>√25 = 5 and √−1 = i, so x = ±5i.</li></ol><p><b>Check:</b> (5i)² = 25 · i² = 25 · (−1) = −25 ✔</p><p><b>Common mistakes:</b> dividing before undoing the add or subtract, forgetting the ±, and writing a negative answer without the i.</p>`,
+`<h3>Step by step: 2(x − 4)² − 36 = 0</h3><ol><li><b>Move the loose number.</b> Add 36 to both sides: 2(x − 4)² = 36.</li><li><b>Divide by the number in front.</b> (x − 4)² = 18.</li><li><b>Take ± the square root.</b> x − 4 = ±√18.</li><li><b>Simplify the radical.</b> √18 = √9 · √2 = 3√2.</li><li><b>Finish solving for x.</b> Add 4 to both sides: x = 4 ± 3√2.</li></ol><p><b>With perfect squares</b> you get two separate numbers. (x − 2)² = 25 gives x − 2 = ±5, so x = 7 or x = −3.</p><p><b>With a negative</b> you get i. (x + 1)² = −9 gives x + 1 = ±3i, so x = −1 ± 3i.</p><p><b>Common mistakes:</b> taking the root of each piece separately (it’s NOT x ± √4), and forgetting to move the number from inside the parentheses at the end.</p>`,
+`<h3>Rationalizing: 3/√7</h3><ol><li><b>Find the root on the bottom.</b> It’s √7.</li><li><b>Multiply top and bottom by it.</b> (3 · √7)/(√7 · √7). This is multiplying by 1, so the value doesn’t change.</li><li><b>Simplify.</b> √7 · √7 = 7, so you get 3√7/7. The bottom is now a whole number.</li></ol><h3>Solving: 3x² − 6 = 19</h3><ol><li>Add 6: 3x² = 25. Divide by 3: x² = 25/3.</li><li>Take ± the root of both sides: x = ±√25/√3 = ±5/√3.</li><li>Rationalize: (5 · √3)/(√3 · √3) = 5√3/3. Answer: x = ±5√3/3.</li></ol><h3>If x² is negative</h3><p>Do the same steps and put an <b>i</b> on the answer. x² = −40/3 gives x = ±(2√30/3)i.</p><p><b>Common mistakes:</b> only multiplying the bottom by the root (you have to do the top too), and forgetting the ±.</p>`];
+var S = {name:"", lvl:0, max:0, done:false, qs:[], i:0, score:0, marks:[], answered:false, ok:false};
+var app = document.getElementById("app");
+try{var sv=JSON.parse(localStorage.getItem("sqquest")||"null"); if(sv&&sv.name){S.name=sv.name;S.max=sv.max||0;S.lvl=S.max;S.done=!!sv.done;}}catch(e){}
+function save(){try{localStorage.setItem("sqquest",JSON.stringify({name:S.name,max:S.max,done:S.done}))}catch(e){}}
+function ri(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+function pick(a){return a[ri(0,a.length-1)]}
+function sg(v){return v<0?"−":"+"}
+function n(v){return v<0?"−"+(-v):""+v}
+function mk(p,c,w,e){var seen={};seen[c]=1;w=w.filter(function(x){if(seen[x])return false;seen[x]=1;return true});return {p:p,c:c,o:shuffle([c].concat(w.slice(0,3))),e:e}}
+function gen(l){
+  var a,b,k,t,h,neg;
+  if(l==0){t=ri(0,3);k=ri(2,13);
+    if(t==0)return mk("Solve: x² = "+k*k,"x = ±"+k,["x = "+k,"x = ±"+k*k,"x = ±"+(k+1)],"√"+k*k+" = "+k+", so x = ±"+k+".");
+    if(t==1){a=ri(2,6);return mk("Solve: "+a+"x² = "+a*k*k,"x = ±"+k,["x = "+k,"x = ±"+k*k,"x = ±"+a*k],"Divide by "+a+": x² = "+k*k+", so x = ±"+k+".")}
+    if(t==3){var s=ri(2,5),r=pick([2,3,5]);a=ri(2,5);return mk("Solve: "+a+"x² = "+a*s*s*r,"x = ±"+s+"√"+r,["x = ±"+s,"x = ±"+s*s+"√"+r,"x = ±"+s*s*r],"Divide by "+a+": x² = "+s*s*r+". Then √"+s*s*r+" = √"+s*s+" · √"+r+" = "+s+"√"+r+", so x = ±"+s+"√"+r+".")}
+    b=pick([2,3,5,6,7,10,11]);return mk("Solve: x² = "+b,"x = ±√"+b,["x = √"+b,"x = ±"+b,"x = ±"+(b+1)],b+" isn’t a perfect square, so leave it as ±√"+b+".");
+  }
+  if(l==1){a=ri(2,5);k=ri(2,9);b=ri(1,20)*pick([1,-1]);neg=ri(0,3)==0;
+    var c=neg?b-a*k*k:b+a*k*k,x2=neg?-k*k:k*k;
+    return mk("Solve: "+a+"x² "+sg(b)+" "+Math.abs(b)+" = "+n(c),neg?"x = ±"+k+"i":"x = ±"+k,neg?["x = ±"+k,"x = "+k+"i","x = ±"+k*k+"i"]:["x = "+k,"x = ±"+k*k,"x = ±"+a*k],"Isolate x²: x² = "+n(x2)+", so x = "+(neg?"±√"+n(x2)+" = ±"+k+"i":"±"+k)+".");
+  }
+  if(l==2){k=ri(2,8);h=ri(1,9)*pick([1,-1]);neg=ri(0,3)==0;
+    var g="(x "+sg(h)+" "+Math.abs(h)+")²",p=-h+k,q=-h-k;
+    if(!neg)return mk("Solve: "+g+" = "+k*k,"x = "+n(p)+" or x = "+n(q),["x = "+n(h+k)+" or x = "+n(h-k),"x = ±"+k,"x = "+n(-h+k*k)+" or x = "+n(-h-k*k)],"x "+sg(h)+" "+Math.abs(h)+" = ±"+k+", so x = "+n(-h)+" ± "+k+" = "+n(p)+" or "+n(q)+".");
+    return mk("Solve: "+g+" + "+k*k+" = 0","x = "+n(-h)+" ± "+k+"i",["x = "+n(h)+" ± "+k+"i","x = "+n(-h)+" ± "+k*k+"i","x = ±"+k+"i"],g+" = −"+k*k+", so x "+sg(h)+" "+Math.abs(h)+" = ±"+k+"i and x = "+n(-h)+" ± "+k+"i.");
+  }
+  a=ri(2,9);b=pick([2,3,5,6,7]);t=ri(0,2);k=ri(2,9);
+  if(t==0)return mk("Rationalize: "+a+"/√"+b,a+"√"+b+"/"+b,[a+"/"+b,"√"+b+"/"+a,a+"√"+b+"/"+b*b],"Multiply top and bottom by √"+b+": "+a+"√"+b+"/"+b+".");
+  if(t==1)return mk("Solve: "+b+"x² = "+k*k,"x = ±"+k+"√"+b+"/"+b,["x = ±"+k+"/"+b,"x = ±"+k+"√"+b+"/"+b*b,"x = ±"+k*k+"√"+b+"/"+b],"x² = "+k*k+"/"+b+", so x = ±"+k+"/√"+b+" = ±"+k+"√"+b+"/"+b+" after rationalizing.");
+  return mk("Solve: −"+b+"x² = "+k*k,"x = ±("+k+"√"+b+"/"+b+")i",["x = ±"+k+"√"+b+"/"+b,"x = ±("+k+"/"+b+")i","x = ±("+k*k+"√"+b+"/"+b+")i"],"x² = −"+k*k+"/"+b+", so x = ±("+k+"√"+b+"/"+b+")i after rationalizing.");
+}
+function shuffle(a){return a.map(function(v){return [Math.random(),v]}).sort(function(x,y){return x[0]-y[0]}).map(function(x){return x[1]})}
+function map(){return '<div class="map">'+LV.map(function(l,i){return '<div class="node '+(i<S.max||S.done?'done':i==S.lvl?'on':'')+'">'+(i<S.max||S.done?'✓ ':'')+'Level '+(i+1)+'</div>'}).join("")+'</div>'}
+function confetti(){var c=["#ffc83d","#3a6df0","#16895f","#d23b40","#fff"];for(var i=0;i<50;i++){var b=document.createElement("div");b.className="bit";b.style.left=Math.random()*100+"vw";b.style.background=c[i%5];b.style.animationDelay=Math.random()*.6+"s";document.body.appendChild(b);setTimeout(function(x){x.remove()},3200,b)}}
+
+function home(){
+  app.innerHTML='<div class="card pop"><h1>Square Root <span class="hl">Quest</span></h1><p>Solve equations by taking square roots. Beat 4 levels. Get at least <b>3 out of 4</b> right on each level to move up.</p><p>Finish all four and you’ll unlock a pass to show your teacher.</p>'+
+  '<p><label for="nm"><b>Your name</b></label><br><input id="nm" autocomplete="off" value="'+S.name.replace(/"/g,"")+'"></p><button id="go">'+(S.max>0?'Continue':'Start Level 1')+'</button></div>';
+  document.getElementById("go").onclick=function(){var v=document.getElementById("nm").value.trim();if(!v){document.getElementById("nm").focus();return}S.name=v;save();if(S.done)return finish();S.lvl=S.max;lesson()};
+}
+function lesson(){
+  var L=LV[S.lvl];
+  app.innerHTML=map()+'<div class="card pop"><h2>Level '+(S.lvl+1)+': '+L.n+'</h2>'+L.lesson+'<button id="go">Start the questions</button></div>';
+  document.getElementById("go").onclick=startQuiz;
+}
+function startQuiz(){
+  S.qs=shuffle(LV[S.lvl].q).slice(0,ASKED).map(function(q){return {p:q[0],c:q[1],o:shuffle([q[1]].concat(q[2])),e:q[3]}});
+  S.i=0;S.score=0;S.marks=[];quiz();
+}
+function quiz(prac){
+  var q=prac?prac:S.qs[S.i];S.prac=!!prac;S.cur=q;S.answered=false;
+  app.innerHTML=map()+'<div class="card pop"><div class="pips">'+S.qs.map(function(_,i){return '<div class="pip '+(S.marks[i]===1?'r':S.marks[i]===0?'w':'')+'"></div>'}).join("")+'</div>'+
+  '<div class="muted">'+(prac?'Practice: a similar problem (it doesn’t count). Get it right to continue.':'Question '+(S.i+1)+' of '+ASKED)+'</div><div class="q">'+q.p+'</div><div class="opts">'+q.o.map(function(o,i){return '<button class="opt" data-i="'+i+'">'+o+'</button>'}).join("")+'</div><div id="fb"></div><button id="ex" class="ghost">💡 Explain it in more detail</button><div id="deep" class="eg" hidden></div></div>';
+  Array.prototype.forEach.call(app.querySelectorAll(".opt"),function(b){b.onclick=function(){answer(b)}});
+  var ex=document.getElementById("ex"),dp=document.getElementById("deep");
+  ex.onclick=function(){if(dp.hidden){dp.innerHTML=DEEP[S.lvl]+(S.answered?'<p><b>This problem:</b> '+S.cur.e+'</p>':'');dp.hidden=false;ex.textContent="Hide the detailed explanation"}else{dp.hidden=true;ex.textContent="💡 Explain it in more detail"}};
+}
+function answer(b){
+  if(S.answered)return;S.answered=true;var q=S.cur,ok=b.textContent===q.c;
+  if(!S.prac){S.marks[S.i]=ok?1:0;if(ok)S.score++;}
+  Array.prototype.forEach.call(app.querySelectorAll(".opt"),function(x){x.disabled=true;if(x.textContent===q.c)x.classList.add("right");else if(x===b)x.classList.add("wrong")});
+  if(!S.prac)document.querySelectorAll(".pip")[S.i].className="pip "+(ok?"r":"w");
+  var last=S.i==ASKED-1;
+  document.getElementById("fb").innerHTML='<div class="fb '+(ok?'ok':'no')+'"><b>'+(ok?["Nice!","Yes!","Nailed it!","Correct!"][S.i%4]:"Not quite.")+'</b> '+q.e+'</div><button id="nx">'+(ok?(last?'See my results':'Next question'):'Try a similar problem')+'</button>';
+  var nx=document.getElementById("nx");nx.focus();nx.onclick=function(){if(!ok)quiz(gen(S.lvl));else if(last)result();else{S.i++;quiz()}};
+}
+function result(){
+  var pass=S.score>=PASS;
+  if(pass){confetti();
+    app.innerHTML=map()+'<div class="card cert pop"><div class="big">🎉</div><h2>Level '+(S.lvl+1)+' cleared!</h2><p>You got <b>'+S.score+' of '+ASKED+'</b> right ('+Math.round(S.score/ASKED*100)+'%).</p><button id="nx">'+(S.lvl==LV.length-1?'Get my pass':'Go to Level '+(S.lvl+2))+'</button> <button id="rs" class="ghost">Start over</button></div>';
+    document.getElementById("nx").onclick=function(){adv()};
+    document.getElementById("rs").onclick=function(){restart(this)};
+  }else{
+    app.innerHTML=map()+'<div class="card pop"><h2>Time to get some help</h2><p>You got <b>'+S.score+' of '+ASKED+'</b> right. You need at least '+PASS+' to move on.</p>'+
+    '<div class="fb no"><b>✋ Please call your teacher over.</b> They’ll go over the problems with you.</div>'+
+    '<p class="muted">Teacher only:</p><input id="pin" type="password" inputmode="numeric" placeholder="Teacher code" aria-label="Teacher code"> <button id="ok" class="ghost">Unlock</button><div id="pm" style="margin-top:12px"></div><p><button id="rs" class="ghost">Start over</button></p></div>';
+    document.getElementById("rs").onclick=function(){restart(this)};
+    document.getElementById("ok").onclick=function(){
+      var pm=document.getElementById("pm");
+      if(document.getElementById("pin").value!==TEACHER_PIN){pm.innerHTML='<div class="fb no">That code isn’t right.</div>';return}
+      pm.innerHTML='<button id="re" class="ghost">Retry this level</button> <button id="sk">Move to next level</button>';
+      document.getElementById("re").onclick=lesson;
+      document.getElementById("sk").onclick=adv;
+    };
+  }
+}
+function restart(b){if(!b.dataset.s){b.dataset.s=1;b.textContent="Click again to erase progress";return}S.max=0;S.lvl=0;S.done=false;save();home()}
+function adv(){
+  if(S.lvl==LV.length-1){S.done=true;S.max=LV.length;save();return finish()}
+  S.lvl++;S.max=Math.max(S.max,S.lvl);save();lesson();
+}
+function finish(){
+  confetti();
+  var d=new Date(),k=(S.name+d.toDateString()),h=0;for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))%46656;
+  var code=("000"+h.toString(36).toUpperCase()).slice(-3)+"-"+LV.length*25;
+  app.innerHTML=map()+'<div class="card cert pop"><div class="big">🏆</div><h1>Mastered!</h1><p><b>'+S.name.replace(/</g,"&lt;")+'</b> solved equations with square roots and cleared all 4 levels.</p><p>Show this screen to your teacher:</p><div class="code">'+code+'</div><p class="muted" id="clk" style="margin-top:14px"></p><button id="rs" class="ghost">Start over</button></div>';
+  var clk=document.getElementById("clk");(function t(){if(!document.getElementById("clk"))return;clk.textContent=new Date().toLocaleString();setTimeout(t,1000)})();
+  document.getElementById("rs").onclick=function(){S.max=0;S.lvl=0;S.done=false;save();home()};
+}
+home();
+</script>
+</body>
+</html>
